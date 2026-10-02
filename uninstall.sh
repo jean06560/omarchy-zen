@@ -179,7 +179,7 @@ if zen_profile="$(find_zen_profile)"; then
     "$chrome_dir/zen-auto-style-content.css" \
     "$chrome_dir/zen-auto-style-mods.css" \
     "$chrome_dir/custom-zen.css"
-  rm -rf "$chrome_dir/zen-auto-style-mods"
+  rm -rf "$chrome_dir/zen-auto-style-mods" "$chrome_dir/omarchy-dr"
 fi
 
 # Remove dangerous prefs the legacy extension required. These weaken Zen's

@@ -145,6 +145,21 @@ From then on every theme switch repaints Zen within about a second, no restart. 
 - **Tradeoff:** it writes two root-owned files into the Zen install dir (`omarchy-zen.cfg`, `defaults/pref/omarchy-zen-prefs.js`) and runs that script with browser privileges. It is ~70 readable lines; it only reads the palette file and registers CSS.
 - Inert on profiles without Omarchy Zen, survives `zen-browser-bin` upgrades (pacman keeps unowned files), refuses to overwrite another autoconfig loader. `uninstall.sh` disables it.
 
+### Dark Reader sync (optional, needs the Dark Reader extension)
+
+Live reload themes Zen itself. To make **web pages** follow the theme too, this fork can drive [Dark Reader](https://darkreader.org/) (dynamic mode) from the same palette: background, text, selection and light/dark mode, live, no page reload.
+
+```bash
+./live.sh enable                 # once (sudo): installs the autoconfig with the Dark Reader hook
+./live.sh darkreader enable      # copies two small modules into <profile>/chrome/omarchy-dr/ (no sudo)
+./live.sh darkreader status      # enabled | enabled, outdated | disabled
+./live.sh darkreader disable
+```
+
+Install Dark Reader yourself, turn its **Sync settings off**, and restart Zen once. Everything is opt-in: without `chrome/omarchy-dr/` the autoconfig does nothing extra. Links and accents are left to Dark Reader's own algorithm on purpose, and sites it already treats as dark (Spotify, Netflix, ...) stay untouched unless you add them to its "enabled for" list.
+
+How it works: Dark Reader only accepts theme changes from its own UI pages, so a hidden Dark Reader options page is kept in the Zen window and a small window actor in that page forwards the palette. It relies on Gecko internals, so it is best-effort: any failure is swallowed (30 retries, then it waits for the next theme change). `python3 tools/test-dark-reader.py` checks it end to end on a throwaway headless Zen (needs `geckodriver`). Inspect it from the Browser Console with `ChromeUtils.importESModule("resource://omarchy-dr/OmarchyDR.sys.mjs").debug`.
+
 ## Legibility guarantees (1.2.0)
 
 Pywal palettes occasionally ship a low-contrast foreground/background pair or a washed-out accent, which can make typed text unreadable. The 1.2.0 renderer fixes this at the source: accent-derived colors (selected tab, menu hover, URL suggestions) are no longer a blind `color-mix` — the renderer **binary-searches the minimum darkening/lightening that reaches WCAG AA (≥4.5:1) against the panel**, per theme mode (light/dark). Menus and panels pin background **and** foreground to the same palette pair (the old version reverted the popup background to native white, producing white-on-white in dark themes). The result is that *every* theme — light or dark — keeps legible text.
@@ -166,6 +181,9 @@ Two people besides the maintainer have work merged into this repository right no
 - **BrunnoVert** ([caniswim](https://github.com/caniswim)) — opened [PR #2](https://github.com/Davidxap/omarchy-zen/pull/2), merged as `40dbcc8`: he moved the `::selection` rules out of the `@-moz-document` URL-matched scope so page text selection follows the active theme on **every** website instead of only the pattern-matched ones. That is the headline feature of 1.3.0. Thank you for the careful CSS work.
 
 ## Changelog
+
+### Unreleased
+- **Dark Reader sync (opt-in)** — `./live.sh darkreader enable` makes web pages follow the Omarchy palette (background, text, selection, light/dark) live through Dark Reader's dynamic theme. Includes `tools/test-dark-reader.py`, an end-to-end check on a throwaway headless Zen.
 
 ### 1.4.2
 - **The toast clears half as fast** — `Theme changed: <theme>` is posted at `low` urgency. The shell clamps a toast to a floor of 8s for `normal` and 5s for `low`, so `normal` was pinning it on screen for eight seconds. Five seconds is the floor; nothing shorter is reachable from a sender.
