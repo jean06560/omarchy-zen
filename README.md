@@ -156,7 +156,7 @@ Live reload themes Zen itself. To make **web pages** follow the theme too, this 
 ./live.sh darkreader disable
 ```
 
-Install Dark Reader yourself, turn its **Sync settings off**, and restart Zen once. Everything is opt-in: without `chrome/omarchy-dr/` the autoconfig does nothing extra. Links and accents are left to Dark Reader's own algorithm on purpose, and sites it already treats as dark (Spotify, Netflix, ...) stay untouched unless you add them to its "enabled for" list.
+Install Dark Reader yourself and restart Zen once. Everything is opt-in: without `chrome/omarchy-dr/` the autoconfig does nothing extra. Links and accents are left to Dark Reader's own algorithm on purpose, and sites it already treats as dark (Spotify, Netflix, ...) stay untouched unless you add them to its "enabled for" list.
 
 How it works: Dark Reader only accepts theme changes from its own UI pages, so a hidden Dark Reader options page is kept in the Zen window and a small window actor in that page forwards the palette. It relies on Gecko internals, so it is best-effort: any failure is swallowed (30 retries, then it waits for the next theme change). `python3 tools/test-dark-reader.py` checks it end to end on a throwaway headless Zen (needs `geckodriver`). Inspect it from the Browser Console with `ChromeUtils.importESModule("resource://omarchy-dr/OmarchyDR.sys.mjs").debug`.
 

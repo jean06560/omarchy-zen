@@ -114,7 +114,7 @@ darkreader() {
       fi
       install -Dm644 -t "$dest" "$project_dir"/live/darkreader/*.mjs
       echo "Dark Reader sync enabled ($dest)."
-      echo "Install the Dark Reader extension if needed, turn its \"Sync settings\" off, restart Zen once."
+      echo "Install the Dark Reader extension if needed, then restart Zen once."
       ;;
     disable)
       rm -rf "$dest"
