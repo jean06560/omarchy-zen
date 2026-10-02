@@ -11,7 +11,13 @@
 # daemon. Tradeoff: the two files live in the root-owned Zen install dir, so
 # enable/disable needs sudo. Unowned files survive zen-browser-bin upgrades.
 #
+# Optional Dark Reader sync (needs the Dark Reader extension, installed by you):
+# `./live.sh darkreader enable` copies two small modules into the profile's
+# chrome/omarchy-dr/ (no sudo); the autoconfig then pushes the palette into Dark
+# Reader so web pages follow the theme too. Without that folder it does nothing.
+#
 # Usage: ./live.sh enable | disable | status
+#        ./live.sh darkreader enable | disable | status
 
 set -euo pipefail
 
@@ -53,6 +59,85 @@ foreign_autoconfig() {
     | grep -v "/$prefs_name\$" || true
 }
 
+find_zen_profile() {
+  local zen_root installs_file profiles_file profile_path
+
+  if [[ -n ${ZEN_PROFILE:-} ]]; then
+    [[ -d $ZEN_PROFILE ]] || { echo "ZEN_PROFILE does not exist: $ZEN_PROFILE" >&2; return 1; }
+    printf '%s\n' "$ZEN_PROFILE"
+    return
+  fi
+
+  if [[ -n ${ZEN_CONFIG_DIR:-} ]]; then
+    zen_root="$ZEN_CONFIG_DIR"
+  elif [[ -d "$HOME/.zen" ]]; then
+    zen_root="$HOME/.zen"
+  else
+    zen_root="$HOME/.config/zen"
+  fi
+  installs_file="$zen_root/installs.ini"
+  profiles_file="$zen_root/profiles.ini"
+
+  if [[ -f $installs_file ]]; then
+    profile_path="$(awk -F= '$1 == "Default" && substr($0, index($0, "=") + 1) != "" { print substr($0, index($0, "=") + 1); exit }' "$installs_file")"
+    if [[ -n $profile_path && -d $zen_root/$profile_path ]]; then
+      printf '%s\n' "$zen_root/$profile_path"
+      return
+    fi
+  fi
+
+  if [[ -f $profiles_file ]]; then
+    profile_path="$(awk -F= '$1 == "Path" { path = substr($0, index($0, "=") + 1) } $1 == "Default" && $2 == "1" && path != "" { print path; exit }' "$profiles_file")"
+    if [[ -n $profile_path && -d $zen_root/$profile_path ]]; then
+      printf '%s\n' "$zen_root/$profile_path"
+      return
+    fi
+  fi
+
+  return 1
+}
+
+darkreader() {
+  local action=${1:-status} profile dest
+  profile="$(find_zen_profile)" || {
+    echo "Unable to find Zen's active profile (rerun with ZEN_PROFILE=/absolute/path)." >&2
+    return 1
+  }
+  dest="$profile/chrome/omarchy-dr"
+
+  case "$action" in
+    enable)
+      if ! grep -qs 'omarchy-dr' "$zen_dir/$cfg_name"; then
+        echo "The installed autoconfig predates Dark Reader support." >&2
+        echo "Run ./live.sh enable first (sudo), then retry." >&2
+        return 1
+      fi
+      install -Dm644 -t "$dest" "$project_dir"/live/darkreader/*.mjs
+      echo "Dark Reader sync enabled ($dest)."
+      echo "Install the Dark Reader extension if needed, then restart Zen once."
+      ;;
+    disable)
+      rm -rf "$dest"
+      echo "Dark Reader sync disabled. Restart Zen to unload it."
+      ;;
+    status)
+      if [[ -d $dest ]] \
+        && cmp -s "$project_dir/live/darkreader/OmarchyDR.sys.mjs" "$dest/OmarchyDR.sys.mjs" \
+        && cmp -s "$project_dir/live/darkreader/DRSyncChild.sys.mjs" "$dest/DRSyncChild.sys.mjs"; then
+        echo "enabled ($dest)"
+      elif [[ -d $dest ]]; then
+        echo "enabled, outdated ($dest) — rerun: ./live.sh darkreader enable"
+      else
+        echo "disabled"
+      fi
+      ;;
+    *)
+      echo "Usage: $0 darkreader enable | disable | status" >&2
+      return 2
+      ;;
+  esac
+}
+
 zen_dir="$(find_zen_dir)" || {
   echo "Unable to find the Zen install directory." >&2
   echo "Rerun with ZEN_INSTALL_DIR=/path/to/zen (the dir with application.ini)." >&2
@@ -91,8 +176,11 @@ case "${1:-status}" in
       echo "disabled ($zen_dir)"
     fi
     ;;
+  darkreader)
+    darkreader "${2:-status}"
+    ;;
   *)
-    echo "Usage: $0 enable | disable | status" >&2
+    echo "Usage: $0 enable | disable | status | darkreader enable|disable|status" >&2
     exit 2
     ;;
 esac
