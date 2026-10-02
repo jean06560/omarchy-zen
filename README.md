@@ -1,5 +1,7 @@
 # Omarchy Zen Themes Sync
 
+> **This is a fork of [Davidxap/omarchy-zen](https://github.com/Davidxap/omarchy-zen)** that adds an optional [Dark Reader sync](#dark-reader-sync-optional-needs-the-dark-reader-extension) so web pages follow the Omarchy theme. Everything else is upstream's work. The `light.mode` fix it includes is proposed upstream in [PR #11](https://github.com/Davidxap/omarchy-zen/pull/11).
+
 Syncs Omarchy's Pywal palette into Zen Browser — pure CSS, no extensions, no privileged preferences, no native host, no background daemon, and **live theme switches with no browser restart**. Install as an Omarchy shell plugin or standalone script. Survives Zen updates gracefully.
 
 > **Started as a fork of [gstrand99/zen-auto-style](https://github.com/gstrand99/zen-auto-style)** by Gregory Strand (MIT) — original template, CSS and extension. It has since grown well past its source: Omarchy 4.x support, a hardened CSS-only install, WCAG-legible theming, themed selection on every site, and live reload with no extension or weakened prefs. The original extension lives on unchanged in [`legacy/`](legacy/).
